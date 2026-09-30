@@ -40,6 +40,53 @@ Apply `db/migrations/001_init.sql` to PostgreSQL, then connect the repositories 
 
 `mappedFolderId` must be the UUID of an existing virtual folder node in `virtual_nodes`.
 
+## Google Drive storage provider (`GDRIVE`)
+
+Install the Google APIs client before using the Google Drive provider:
+
+```bash
+npm install googleapis
+```
+
+Set the Google Drive folder and credentials paths in your environment. The token path is optional:
+
+```bash
+export GDRIVE_FOLDER_ID="your-google-drive-folder-id"
+export GDRIVE_CREDENTIALS_PATH="./secrets/google-credentials.json"
+export GDRIVE_TOKEN_PATH="./secrets/google-token.json"
+```
+
+Create a provider using the environment-based configuration:
+
+```ts
+import { StoragePluginFactory } from './src/storage/pluginFactory.js';
+
+const factory = new StoragePluginFactory();
+const provider = factory.create('GDRIVE', {});
+```
+
+Alternatively, provide the configuration explicitly:
+
+```ts
+import { StoragePluginFactory } from './src/storage/pluginFactory.js';
+
+const factory = new StoragePluginFactory();
+const provider = factory.create('GDRIVE', {
+  folderId: 'your-google-drive-folder-id',
+  credentialsPath: './secrets/google-credentials.json',
+  tokenPath: './secrets/google-token.json',
+});
+```
+
+Use the provider to store, retrieve, check, and delete files:
+
+```ts
+await provider.put('hello.txt', Buffer.from('Hello Google Drive'));
+const contents = await provider.get('hello.txt');
+const exists = await provider.exists('hello.txt');
+await provider.delete('hello.txt');
+```
+
 ### cURL example
 
 ```bash
