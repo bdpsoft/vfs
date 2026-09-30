@@ -15,6 +15,8 @@ Apply `db/migrations/001_init.sql` to PostgreSQL, then connect the repositories 
 ## API scaffold
 
 - `POST /api/v1/sources` validates and accepts a source definition, returning `202` with a job ID.
+- `POST /api/v1/nodes` creates a virtual node as root (if tree empty) or under an existing parent, and always returns created node.
+- `GET /api/v1/nodes/:id/children` returns all non-deleted direct children of a virtual node.
 - `POST /api/v1/nodes/:id/share` accepts an asynchronous share request and returns `202` with a job ID.
 - `GET /api/v1/shares/download/:token` is the download boundary; production deployments must connect token lookup, authorization, cache hydration, and streaming repositories.
 
@@ -56,6 +58,52 @@ curl -X POST http://localhost:3000/api/v1/sources \
       "secretAccessKey": "${S3_SECRET_ACCESS_KEY}"
     }
   }'
+```
+
+### Example JSON for creating a **root** virtual node (`POST /api/v1/nodes`)
+
+> Root creation is allowed only when `virtual_nodes` has no active rows.
+
+```json
+{
+  "name": "Arhiva",
+  "kind": "DIRECTORY",
+  "parentId": null,
+  "metadata": {
+    "label": "Top level root"
+  }
+}
+```
+
+### Example JSON for creating a child node on an existing node (`POST /api/v1/nodes`)
+
+```json
+{
+  "name": "2026",
+  "kind": "DIRECTORY",
+  "parentId": "11111111-2222-3333-4444-555555555555",
+  "metadata": {
+    "department": "finance"
+  }
+}
+```
+
+### cURL for node creation
+
+```bash
+curl -X POST http://localhost:3000/api/v1/nodes \
+  -H "Content-Type: application/json" \
+  -d '{
+    "name": "2026",
+    "kind": "DIRECTORY",
+    "parentId": "11111111-2222-3333-4444-555555555555"
+  }'
+```
+
+### cURL for getting children
+
+```bash
+curl http://localhost:3000/api/v1/nodes/11111111-2222-3333-4444-555555555555/children
 ```
 
 ## Workers
